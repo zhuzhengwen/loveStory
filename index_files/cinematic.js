@@ -1,6 +1,7 @@
 /* ============================================================================
- *  Love Story · 简约浪漫版
- *  静谧星夜里，一棵树缓缓生长、绽放、落花。柔和 · 干净 · 耐看。
+ *  Love Story · 清新浪漫版（白天）
+ *  蓝天白云、暖阳、彩虹之下，一棵樱花树缓缓生长、绽放、落瓣。
+ *  明媚 · 干净 · 治愈。
  * ==========================================================================*/
 (function () {
     'use strict';
@@ -64,9 +65,9 @@
         /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 
     var Q = {
-        stars: isMobile ? 160 : 300,
+        clouds: isMobile ? 9 : 16,
         petals: isMobile ? 90 : 170,
-        motes: isMobile ? 16 : 34,
+        motes: isMobile ? 14 : 28,
         blossoms: isMobile ? 120 : 240,
         dpr: isMobile ? 1.8 : 2
     };
@@ -88,6 +89,26 @@
         grd.addColorStop(1, color.replace('%A%', '0'));
         g.fillStyle = grd;
         g.beginPath(); g.arc(r, r, r, 0, TAU); g.fill();
+        return c;
+    }
+    // 蓬松的云：几团柔白叠在一起
+    function makeCloud() {
+        var S = 256, c = document.createElement('canvas');
+        c.width = S; c.height = S * 0.66;
+        var g = c.getContext('2d');
+        var puffs = [
+            [0.30, 0.62, 0.26], [0.50, 0.50, 0.34], [0.70, 0.60, 0.28],
+            [0.42, 0.66, 0.22], [0.60, 0.68, 0.22], [0.50, 0.74, 0.30]
+        ];
+        for (var i = 0; i < puffs.length; i++) {
+            var px = puffs[i][0] * S, py = puffs[i][1] * S * 0.66, pr = puffs[i][2] * S;
+            var grd = g.createRadialGradient(px, py, 0, px, py, pr);
+            grd.addColorStop(0, 'rgba(255,255,255,0.95)');
+            grd.addColorStop(0.55, 'rgba(255,255,255,0.7)');
+            grd.addColorStop(1, 'rgba(255,255,255,0)');
+            g.fillStyle = grd;
+            g.beginPath(); g.arc(px, py, pr, 0, TAU); g.fill();
+        }
         return c;
     }
     function petalPath(g, r) {
@@ -117,14 +138,22 @@
     }
 
     var SPR = {
-        warm: makeGlow('rgba(255,206,140,%A%)', 96),
+        sun: makeGlow('rgba(255,236,170,%A%)', 128),
         pink: makeGlow('rgba(255,168,200,%A%)', 96),
-        ice: makeGlow('rgba(196,216,255,%A%)', 96),
-        white: makeGlow('rgba(255,248,252,%A%)', 96),
+        ice: makeGlow('rgba(210,236,255,%A%)', 96),
+        white: makeGlow('rgba(255,252,246,%A%)', 96),
+        green: makeGlow('rgba(170,224,150,%A%)', 96),
+        cloud: makeCloud(),
+        // 花瓣（前两种为樱花粉/白，第三种为嫩绿叶）
         petals: [
             makePetal('#ffe1ec', '#ffb0cf', 'rgba(255,160,200,0.8)'),
-            makePetal('#fff2f7', '#ffc6da', 'rgba(255,190,214,0.8)'),
-            makePetal('#ffeede', '#ffcf9e', 'rgba(255,200,150,0.8)')
+            makePetal('#fff6fb', '#ffd6e6', 'rgba(255,190,214,0.8)'),
+            makePetal('#c7ebac', '#93cf77', 'rgba(150,205,120,0.8)')
+        ],
+        // 飘落的花瓣：粉、白两色
+        fall: [
+            makePetal('#ffe1ec', '#ffb0cf', 'rgba(255,160,200,0.8)'),
+            makePetal('#fff6fb', '#ffd6e6', 'rgba(255,190,214,0.8)')
         ]
     };
 
@@ -235,13 +264,12 @@
     }
 
     /* ------------------------------------------------------------ 粒子 */
-    var stars = [];
-    for (var i = 0; i < Q.stars; i++) {
-        var a = rr(0, TAU), b = Math.acos(rr(-1, 1)), R = rr(60, 180);
-        stars.push({
-            p: V(Math.sin(b) * Math.cos(a) * R, Math.abs(Math.cos(b)) * R * 0.8 - 4, Math.sin(b) * Math.sin(a) * R),
-            r: rr(0.5, 2.4), tw: rr(0, TAU), sp: rr(0.3, 1.4),
-            spr: rng() < 0.16 ? SPR.ice : SPR.white, a: rr(0.25, 0.8)
+    // 白云：高空飘浮，缓缓向右移动
+    var clouds = [];
+    for (var i = 0; i < Q.clouds; i++) {
+        clouds.push({
+            p: V(rr(-80, 80), rr(20, 52), rr(-105, -48)),
+            s: rr(8, 17), sp: rr(0.25, 0.7), a: rr(0.4, 0.72)
         });
     }
 
@@ -253,18 +281,18 @@
         pt.spin = rr(0, TAU); pt.spinSp = rr(-1.6, 1.6);
         pt.flip = rr(0, TAU); pt.flipSp = rr(0.5, 2.0);
         pt.size = rr(0.09, 0.22);
-        pt.spr = SPR.petals[(rng() * SPR.petals.length) | 0];
+        pt.spr = SPR.fall[(rng() * SPR.fall.length) | 0];
         return pt;
     }
     for (var i2 = 0; i2 < Q.petals; i2++) petals.push(resetPetal({}, true));
 
-    // 柔和光尘，缓慢漂浮，无拖尾
+    // 阳光下的浮尘 / 花粉，缓缓上浮
     var motes = [];
     for (var i3 = 0; i3 < Q.motes; i3++) {
         motes.push({
             p: V(rr(-12, 12), rr(1, 14), rr(-10, 8)),
             vy: rr(0.15, 0.5), sw: rr(0, TAU), swSp: rr(0.2, 0.6), swAmp: rr(0.3, 1.0),
-            r: rr(1.0, 2.6), tw: rr(0, TAU), spr: rng() < 0.3 ? SPR.ice : SPR.warm, a: rr(0.25, 0.6)
+            r: rr(1.0, 2.6), tw: rr(0, TAU), spr: rng() < 0.4 ? SPR.white : SPR.sun, a: rr(0.2, 0.5)
         });
     }
 
@@ -272,7 +300,7 @@
     var ACT = { fall: 0.0, land: 2.6, grow: 2.8, text: 9.6, clock: 11.6 };
     var GROW_SPAN = 7.6;
     var started = false, T = 0, last = 0;
-    var moon = V(-26, 34, -30);
+    var sun = V(24, 33, -30);          // 暖阳在右上方，避开左侧情书
 
     function cameraDirector(t, dt) {
         var P, Tg, fov = 44;
@@ -314,6 +342,12 @@
         ctx.globalAlpha = alpha;
         ctx.drawImage(spr, sx - size / 2, sy - size / 2, size, size);
     }
+    function drawSpriteWH(spr, sx, sy, w, h, alpha) {
+        if (alpha <= 0.004 || w <= 0.2) return;
+        if (sx < -w || sx > canvas.width + w || sy < -h || sy > canvas.height + h) return;
+        ctx.globalAlpha = alpha;
+        ctx.drawImage(spr, sx - w / 2, sy - h / 2, w, h);
+    }
     function horizonY() {
         var hd = vnorm(V(basis.f.x, 0, basis.f.z));
         var ez = vdot(hd, basis.f), ey = vdot(hd, basis.u);
@@ -321,43 +355,85 @@
         return cy - focal * (ey / ez);
     }
 
-    // 纯净夜空渐变 + 一轮柔和月光 + 树后暖晕
+    // 明净蓝天渐变（顶部湛蓝 → 地平线附近的暖白）
     function drawSky(t) {
         var grd = ctx.createLinearGradient(0, 0, 0, canvas.height);
-        grd.addColorStop(0, '#0a0716');
-        grd.addColorStop(0.42, '#130d24');
-        grd.addColorStop(0.72, '#1c1130');
-        grd.addColorStop(1, '#070510');
+        grd.addColorStop(0.00, '#5fb4f2');
+        grd.addColorStop(0.34, '#8fcdf6');
+        grd.addColorStop(0.62, '#c4e6fb');
+        grd.addColorStop(0.82, '#eaf6ff');
+        grd.addColorStop(1.00, '#fdf1ec');
         ctx.fillStyle = grd;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
 
-        var mn = proj(moon);
-        if (mn) {
-            ctx.globalCompositeOperation = 'lighter';
-            drawSprite(SPR.warm, mn.x, mn.y, 620 * DPR, 0.16);
-            drawSprite(SPR.white, mn.x, mn.y, 150 * DPR, 0.5);
-            drawSprite(SPR.white, mn.x, mn.y, 74 * DPR, 0.6);
-            ctx.globalCompositeOperation = 'source-over';
+    // 暖阳：柔和外晕 + 明亮内核 + 缓缓旋转的光芒
+    function drawSun(t) {
+        var q = proj(sun);
+        if (!q) return;
+        ctx.globalCompositeOperation = 'lighter';
+        // 光芒
+        ctx.save();
+        ctx.translate(q.x, q.y);
+        ctx.rotate(t * 0.03);
+        var rays = 12, len = 190 * DPR, inr = 60 * DPR;
+        ctx.strokeStyle = 'rgba(255,240,190,0.16)';
+        ctx.lineWidth = 8 * DPR;
+        ctx.lineCap = 'round';
+        for (var i = 0; i < rays; i++) {
+            var a = i / rays * TAU;
+            var wob = 1 + 0.12 * Math.sin(t * 1.3 + i);
+            ctx.beginPath();
+            ctx.moveTo(Math.cos(a) * inr, Math.sin(a) * inr);
+            ctx.lineTo(Math.cos(a) * len * wob, Math.sin(a) * len * wob);
+            ctx.stroke();
         }
-        // 树后的暖色柔光
-        var glow = proj(V(0, 8, 0));
-        if (glow) {
-            ctx.globalCompositeOperation = 'lighter';
-            drawSprite(SPR.pink, glow.x, glow.y, 520 * DPR, 0.10);
-            ctx.globalCompositeOperation = 'source-over';
-        }
+        ctx.restore();
+        // 光晕 + 内核
+        drawSprite(SPR.sun, q.x, q.y, 640 * DPR, 0.30);
+        drawSprite(SPR.sun, q.x, q.y, 300 * DPR, 0.40);
+        drawSprite(SPR.white, q.x, q.y, 150 * DPR, 0.75);
+        drawSprite(SPR.white, q.x, q.y, 78 * DPR, 0.9);
+        ctx.globalCompositeOperation = 'source-over';
         ctx.globalAlpha = 1;
     }
 
-    function drawStars(t) {
+    // 雨后彩虹：随树的生长柔柔浮现，横跨天际
+    function drawRainbow(t) {
+        var gate = span(T, ACT.grow + 1.5, ACT.grow + 6);
+        if (gate <= 0) return;
+        var cxp = canvas.width * 0.5 + Math.sin(t * 0.05) * canvas.width * 0.02;
+        var cyp = canvas.height * 1.02;
+        var R = Math.max(canvas.width, canvas.height) * 0.72;
+        var bands = [
+            'rgba(255,140,150,', 'rgba(255,190,120,', 'rgba(255,238,150,',
+            'rgba(160,225,150,', 'rgba(140,205,255,', 'rgba(160,170,255,', 'rgba(205,155,240,'
+        ];
+        var bw = R * 0.026;
+        ctx.save();
         ctx.globalCompositeOperation = 'lighter';
-        for (var i = 0; i < stars.length; i++) {
-            var s = stars[i], q = proj(s.p);
-            if (!q) continue;
-            var tw = 0.6 + 0.4 * Math.sin(t * s.sp + s.tw);
-            drawSprite(s.spr, q.x, q.y, s.r * 10 * DPR * tw, s.a * tw * 0.8);
+        for (var i = 0; i < bands.length; i++) {
+            ctx.beginPath();
+            ctx.lineWidth = bw;
+            ctx.strokeStyle = bands[i] + (0.16 * gate).toFixed(3) + ')';
+            ctx.arc(cxp, cyp, R - i * bw, Math.PI, TAU);
+            ctx.stroke();
         }
+        ctx.restore();
         ctx.globalCompositeOperation = 'source-over';
+        ctx.globalAlpha = 1;
+    }
+
+    function drawClouds(t, dt) {
+        for (var i = 0; i < clouds.length; i++) {
+            var c = clouds[i];
+            c.p.x += c.sp * dt;
+            if (c.p.x > 82) { c.p.x = -82; c.p.z = rr(-105, -48); c.p.y = rr(20, 52); }
+            var q = proj(c.p);
+            if (!q) continue;
+            var w = c.s * q.s * 1.6, h = w * 0.6;
+            drawSpriteWH(SPR.cloud, q.x, q.y, w, h, c.a);
+        }
         ctx.globalAlpha = 1;
     }
 
@@ -366,20 +442,21 @@
         if (hy > -canvas.height) {
             var top = Math.max(hy, -10);
             var grd = ctx.createLinearGradient(0, top, 0, canvas.height);
-            grd.addColorStop(0, 'rgba(10,7,22,0)');
-            grd.addColorStop(0.16, 'rgba(9,6,20,0.7)');
-            grd.addColorStop(1, 'rgba(4,3,12,0.98)');
+            grd.addColorStop(0, 'rgba(197,231,168,0)');
+            grd.addColorStop(0.12, 'rgba(178,220,150,0.75)');
+            grd.addColorStop(0.55, 'rgba(140,196,120,0.95)');
+            grd.addColorStop(1, 'rgba(108,172,96,1)');
             ctx.fillStyle = grd;
             ctx.fillRect(0, top, canvas.width, canvas.height - top);
         }
-        // 树根柔和光池
+        // 树根处的暖光池
         var base = proj(V(0, 0.02, 0));
         if (base) {
             var r = 180 * base.s / 30 * DPR + 40 * DPR;
             var pg = ctx.createRadialGradient(base.x, base.y, 0, base.x, base.y, r);
-            pg.addColorStop(0, 'rgba(255,190,140,0.20)');
-            pg.addColorStop(0.5, 'rgba(200,120,170,0.08)');
-            pg.addColorStop(1, 'rgba(120,60,150,0)');
+            pg.addColorStop(0, 'rgba(255,244,200,0.35)');
+            pg.addColorStop(0.5, 'rgba(200,230,150,0.12)');
+            pg.addColorStop(1, 'rgba(150,200,120,0)');
             ctx.globalCompositeOperation = 'lighter';
             ctx.fillStyle = pg;
             ctx.beginPath(); ctx.ellipse(base.x, base.y, r, r * 0.3, 0, 0, TAU); ctx.fill();
@@ -389,13 +466,14 @@
 
     function drawTree(t) {
         var growT = T - ACT.grow;
-        var mn = proj(moon);
+        var sn = proj(sun);
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         for (var i = 0; i < branches.length; i++) {
             var b = branches[i];
             var p = sat((growT - b.t0) / b.dur);
             if (p <= 0) continue;
+            var trunkCol = b.depth <= 1 ? '#7a4a2c' : (b.depth === 2 ? '#8a5a33' : '#98663c');
             var n = b.nodes.length;
             var upto = p * (n - 1);
             var count = Math.floor(upto);
@@ -407,17 +485,17 @@
                 var rad = b.nodes[j].r;
                 if (prev && q) {
                     var lw = Math.max(0.6 * DPR, (rad + prevR) * 0.5 * q.s);
-                    ctx.strokeStyle = '#1a1122';
+                    ctx.strokeStyle = trunkCol;
                     ctx.lineWidth = lw;
                     ctx.beginPath(); ctx.moveTo(prev.x, prev.y); ctx.lineTo(q.x, q.y); ctx.stroke();
                     if (lw > 1.1 * DPR) {
-                        var ox = 0, oy = -lw * 0.22;
-                        if (mn) {
-                            var ldx = mn.x - q.x, ldy = mn.y - q.y, ll = Math.sqrt(ldx * ldx + ldy * ldy) || 1;
-                            ox = ldx / ll * lw * 0.22; oy = ldy / ll * lw * 0.22;
+                        var ox = 0, oy = -lw * 0.24;
+                        if (sn) {
+                            var ldx = sn.x - q.x, ldy = sn.y - q.y, ll = Math.sqrt(ldx * ldx + ldy * ldy) || 1;
+                            ox = ldx / ll * lw * 0.24; oy = ldy / ll * lw * 0.24;
                         }
-                        ctx.strokeStyle = 'rgba(255,196,150,0.22)';
-                        ctx.lineWidth = lw * 0.4;
+                        ctx.strokeStyle = 'rgba(255,236,190,0.4)';
+                        ctx.lineWidth = lw * 0.42;
                         ctx.beginPath(); ctx.moveTo(prev.x + ox, prev.y + oy); ctx.lineTo(q.x + ox, q.y + oy); ctx.stroke();
                     }
                 }
@@ -428,7 +506,7 @@
                 var mp = vadd(vlerp(a1, a2, frac), windOffset(b, count + frac, t));
                 var q2 = proj(mp);
                 if (q2) {
-                    ctx.strokeStyle = '#1a1122';
+                    ctx.strokeStyle = trunkCol;
                     ctx.lineWidth = Math.max(0.6 * DPR, b.nodes[count].r * q2.s);
                     ctx.beginPath(); ctx.moveTo(prev.x, prev.y); ctx.lineTo(q2.x, q2.y); ctx.stroke();
                 }
@@ -450,14 +528,16 @@
             if (!q) continue;
             var size = f.size * q.s * sc;
             var al = 0.7 + 0.3 * Math.sin(t * 1.5 + f.twk);
-            drawSprite(f.tone % 3 === 0 ? SPR.warm : SPR.pink, q.x, q.y, size * 7, al * 0.4);
+            var isLeaf = f.tone % 3 === 2;
+            drawSprite(isLeaf ? SPR.green : SPR.pink, q.x, q.y, size * 7, al * 0.35);
             var spr = SPR.petals[f.tone % SPR.petals.length];
             ctx.save();
             ctx.translate(q.x, q.y);
             ctx.rotate(f.spin + t * 0.08);
-            for (var k = 0; k < 5; k++) {
-                ctx.rotate(TAU / 5);
-                ctx.globalAlpha = al * 0.85;
+            var leaves = isLeaf ? 2 : 5;
+            for (var k = 0; k < leaves; k++) {
+                ctx.rotate(TAU / leaves);
+                ctx.globalAlpha = al * 0.9;
                 ctx.drawImage(spr, size * 0.15, -size * 0.85, size * 1.7, size * 1.7);
             }
             ctx.restore();
@@ -481,7 +561,6 @@
         var petalStart = ACT.grow + 5;
         if (T < petalStart) return;
         var gate = sat((T - petalStart) / 4);
-        ctx.globalCompositeOperation = 'lighter';
         for (var i = 0; i < petals.length; i++) {
             var p = petals[i];
             if (i / petals.length > gate) continue;
@@ -493,11 +572,10 @@
             ctx.translate(q.x, q.y);
             ctx.rotate(p.spin);
             ctx.scale(1, squash);
-            ctx.globalAlpha = 0.9;
+            ctx.globalAlpha = 0.92;
             ctx.drawImage(p.spr, -size / 2, -size / 2, size, size);
             ctx.restore();
         }
-        ctx.globalCompositeOperation = 'source-over';
         ctx.globalAlpha = 1;
     }
 
@@ -517,7 +595,7 @@
         ctx.globalAlpha = 1;
     }
 
-    // 一颗柔光种子缓缓落下（无闪白、无抖动、无冲击波）
+    // 一颗柔光种子缓缓落下（无闪白、无抖动）
     function drawSeed(t) {
         if (T > ACT.land + 0.3) return;
         var y = started ? lerp(12.5, 0.1, easeInOut(span(T, 0, ACT.land))) : 12.5 + Math.sin(t * 0.8) * 0.4;
@@ -525,7 +603,7 @@
         if (!q) return;
         ctx.globalCompositeOperation = 'lighter';
         var pulse = 0.8 + 0.2 * Math.sin(t * 2.0);
-        drawSprite(SPR.warm, q.x, q.y, 190 * DPR * pulse, 0.4);
+        drawSprite(SPR.sun, q.x, q.y, 190 * DPR * pulse, 0.4);
         drawSprite(SPR.pink, q.x, q.y, 96 * DPR * pulse, 0.45);
         drawSprite(SPR.white, q.x, q.y, 34 * DPR, 0.9);
         ctx.globalCompositeOperation = 'source-over';
@@ -538,21 +616,21 @@
         if (supportsFilter) {
             bloomG.globalCompositeOperation = 'source-over';
             bloomG.clearRect(0, 0, bloomC.width, bloomC.height);
-            bloomG.filter = 'blur(' + (2.4 * DPR).toFixed(1) + 'px) brightness(1.25)';
+            bloomG.filter = 'blur(' + (2.4 * DPR).toFixed(1) + 'px) brightness(1.05)';
             bloomG.drawImage(canvas, 0, 0, bloomC.width, bloomC.height);
             bloomG.filter = 'none';
             ctx.globalCompositeOperation = 'lighter';
-            ctx.globalAlpha = 0.32;
+            ctx.globalAlpha = 0.13;
             ctx.drawImage(bloomC, 0, 0, canvas.width, canvas.height);
             ctx.globalAlpha = 1;
             ctx.globalCompositeOperation = 'source-over';
         }
-        // 柔和暗角
-        var vg = ctx.createRadialGradient(cx, cy * 0.96, Math.min(cx, cy) * 0.5,
-            cx, cy, Math.max(cx, cy) * 1.1);
-        vg.addColorStop(0, 'rgba(0,0,0,0)');
-        vg.addColorStop(0.78, 'rgba(4,2,12,0.22)');
-        vg.addColorStop(1, 'rgba(3,1,10,0.62)');
+        // 极淡的暖色暗角，收一点边缘
+        var vg = ctx.createRadialGradient(cx, cy * 0.9, Math.min(cx, cy) * 0.6,
+            cx, cy, Math.max(cx, cy) * 1.15);
+        vg.addColorStop(0, 'rgba(255,255,255,0)');
+        vg.addColorStop(0.82, 'rgba(255,238,210,0.05)');
+        vg.addColorStop(1, 'rgba(120,150,110,0.16)');
         ctx.fillStyle = vg;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.globalAlpha = 1;
@@ -609,7 +687,9 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         drawSky(t);
-        drawStars(t);
+        drawSun(t);
+        drawRainbow(t);
+        drawClouds(t, dt);
         drawGround(t);
         drawTree(t);
         drawBlossoms(t);

@@ -1,20 +1,20 @@
 /* ============================================================
-   Love Story · 简约浪漫版 样式层
+   Love Story · 清新浪漫版（白天）样式层
    ============================================================ */
 html, body {
     margin: 0;
     padding: 0;
     width: 100%;
     height: 100%;
-    background: #070510;
+    background: #8fcdf6;
     overflow: hidden;
     font-family: "Kaiti SC", "STKaiti", "KaiTi", "楷体", "Microsoft YaHei", "微软雅黑", serif;
-    color: #f6e6ee;
+    color: #6a3a55;
     -webkit-font-smoothing: antialiased;
     -webkit-tap-highlight-color: transparent;
 }
 
-a { color: #ffb2cd; font-size: 14px; }
+a { color: #d15f8a; font-size: 14px; }
 
 #main { width: 100%; height: 100%; }
 #wrap { position: fixed; inset: 0; }
@@ -50,13 +50,13 @@ body.await #canvas { cursor: pointer; }
     line-height: 1.6;
     letter-spacing: 2px;
     margin: 0 0 1.15em 0;
-    color: #fdf2f6;
+    color: #723a5a;
     opacity: 0;
     -webkit-transform: translateY(14px);
     transform: translateY(14px);
     -webkit-filter: blur(6px);
     filter: blur(6px);
-    text-shadow: 0 0 1px rgba(255,255,255,0.5), 0 0 16px rgba(255,150,190,0.35);
+    text-shadow: 0 1px 2px rgba(255,255,255,0.9), 0 0 14px rgba(255,255,255,0.6);
 }
 
 .line.in {
@@ -80,8 +80,8 @@ body.await #canvas { cursor: pointer; }
     margin-right: 0.65em;
     vertical-align: 0.14em;
     border-radius: 50%;
-    background: #ffd9a2;
-    box-shadow: 0 0 8px 1px rgba(255,190,120,0.7);
+    background: #ff8fb4;
+    box-shadow: 0 0 8px 1px rgba(255,140,180,0.8);
 }
 
 .say { margin-left: 0; }
@@ -96,8 +96,8 @@ body.await #canvas { cursor: pointer; }
     pointer-events: none;
     font-size: clamp(14px, 1.5vw, 23px);
     letter-spacing: 2.5px;
-    color: #f7dfe9;
-    text-shadow: 0 0 2px rgba(255,255,255,0.35), 0 0 14px rgba(255,130,175,0.4);
+    color: #6a3350;
+    text-shadow: 0 1px 2px rgba(255,255,255,0.9), 0 0 12px rgba(255,255,255,0.55);
     opacity: 0;
     -webkit-transform: translateY(18px);
     transform: translateY(18px);
@@ -112,11 +112,11 @@ body.await #canvas { cursor: pointer; }
     font-family: "Didot", "Georgia", "Times New Roman", serif;
     font-size: clamp(28px, 3.2vw, 50px);
     padding: 0 0.09em;
-    color: #ffd79a;
-    text-shadow: 0 0 3px rgba(255,255,255,0.5), 0 0 18px rgba(255,190,110,0.6);
+    color: #e8577f;
+    text-shadow: 0 1px 3px rgba(255,255,255,0.95), 0 0 18px rgba(255,255,255,0.6);
 }
 
-.STYLE1 { color: #c9aed2; font-size: 0.86em; letter-spacing: 3px; }
+.STYLE1 { color: #8a6a80; font-size: 0.86em; letter-spacing: 3px; }
 .hand { cursor: pointer; }
 
 /* ---------------- 开场提示（柔和呼吸光环） ---------------- */
@@ -131,7 +131,7 @@ body.await #canvas { cursor: pointer; }
     height: 40px;
     margin-left: -20px;
     border-radius: 50%;
-    border: 1px solid rgba(255,214,170,0.45);
+    border: 1px solid rgba(255,255,255,0.75);
     pointer-events: none;
     -webkit-animation: hintPulse 3s ease-out infinite;
     animation: hintPulse 3s ease-out infinite;
