@@ -1,7 +1,8 @@
 /* ============================================================================
- *  Love Story · 清新浪漫版（白天）
- *  蓝天白云、暖阳、彩虹之下，一棵樱花树缓缓生长、绽放、落瓣。
- *  明媚 · 干净 · 治愈。
+ *  Love Story · 清新浪漫版（白天 · 精致版）
+ *  蓝天白云、暖阳、柔雾彩虹、远山草地。
+ *  一棵樱花树缓缓生长、绽放出饱满的花冠，花瓣随风飘落。
+ *  蝴蝶、飞鸟、草地小花点缀其间。明媚 · 通透 · 治愈。
  * ==========================================================================*/
 (function () {
     'use strict';
@@ -65,10 +66,13 @@
         /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 
     var Q = {
-        clouds: isMobile ? 9 : 16,
-        petals: isMobile ? 90 : 170,
-        motes: isMobile ? 14 : 28,
-        blossoms: isMobile ? 120 : 240,
+        clouds: isMobile ? 8 : 14,
+        petals: isMobile ? 80 : 150,
+        motes: isMobile ? 12 : 24,
+        blossoms: isMobile ? 100 : 200,
+        puffs: isMobile ? 130 : 210,
+        flowers: isMobile ? 26 : 48,
+        butterflies: isMobile ? 3 : 5,
         dpr: isMobile ? 1.8 : 2
     };
     var supportsFilter = (function () {
@@ -91,26 +95,40 @@
         g.beginPath(); g.arc(r, r, r, 0, TAU); g.fill();
         return c;
     }
-    // 蓬松的云：几团柔白叠在一起
-    function makeCloud() {
-        var S = 256, c = document.createElement('canvas');
-        c.width = S; c.height = S * 0.66;
+
+    // 蓬松积云：一排排柔软的团块 + 底部淡蓝阴影，更接近真实云
+    function makeCloud(seed) {
+        var rd = mulberry32(seed);
+        function rv(a, b) { return a + rd() * (b - a); }
+        var S = 320, c = document.createElement('canvas');
+        c.width = S; c.height = Math.floor(S * 0.5);
         var g = c.getContext('2d');
-        var puffs = [
-            [0.30, 0.62, 0.26], [0.50, 0.50, 0.34], [0.70, 0.60, 0.28],
-            [0.42, 0.66, 0.22], [0.60, 0.68, 0.22], [0.50, 0.74, 0.30]
-        ];
-        for (var i = 0; i < puffs.length; i++) {
-            var px = puffs[i][0] * S, py = puffs[i][1] * S * 0.66, pr = puffs[i][2] * S;
-            var grd = g.createRadialGradient(px, py, 0, px, py, pr);
-            grd.addColorStop(0, 'rgba(255,255,255,0.95)');
-            grd.addColorStop(0.55, 'rgba(255,255,255,0.7)');
+        var baseY = c.height * 0.68;
+        var n = 7 + (rd() * 4 | 0);
+        for (var i = 0; i < n; i++) {
+            var f = i / (n - 1);
+            var px = lerp(S * 0.16, S * 0.84, f) + rv(-14, 14);
+            var pr = (0.16 + Math.sin(f * Math.PI) * 0.16) * S * rv(0.8, 1.15);
+            var py = baseY - pr * rv(0.35, 0.75);
+            var grd = g.createRadialGradient(px, py - pr * 0.25, pr * 0.1, px, py, pr);
+            grd.addColorStop(0, 'rgba(255,255,255,0.98)');
+            grd.addColorStop(0.62, 'rgba(255,255,255,0.82)');
             grd.addColorStop(1, 'rgba(255,255,255,0)');
             g.fillStyle = grd;
             g.beginPath(); g.arc(px, py, pr, 0, TAU); g.fill();
         }
+        // 底部阴影（source-atop 只染在云体上）
+        g.globalCompositeOperation = 'source-atop';
+        var sh = g.createLinearGradient(0, 0, 0, c.height);
+        sh.addColorStop(0, 'rgba(255,255,255,0)');
+        sh.addColorStop(0.62, 'rgba(255,255,255,0)');
+        sh.addColorStop(1, 'rgba(168,199,230,0.5)');
+        g.fillStyle = sh;
+        g.fillRect(0, 0, c.width, c.height);
+        g.globalCompositeOperation = 'source-over';
         return c;
     }
+
     function petalPath(g, r) {
         g.beginPath();
         g.moveTo(0, 0);
@@ -137,20 +155,62 @@
         return c;
     }
 
+    // 花冠团：柔软的粉色绒球，用来堆出饱满的樱花树冠
+    function makePuff(inner, outer) {
+        var S = 128, c = document.createElement('canvas');
+        c.width = c.height = S;
+        var g = c.getContext('2d');
+        var r = S / 2;
+        var grd = g.createRadialGradient(r * 0.86, r * 0.80, r * 0.05, r, r, r);
+        grd.addColorStop(0, inner);
+        grd.addColorStop(0.45, outer);
+        grd.addColorStop(0.8, outer);
+        grd.addColorStop(1, outer.replace('rgb(', 'rgba(').replace(')', ',0)'));
+        g.fillStyle = grd;
+        g.beginPath(); g.arc(r, r, r, 0, TAU); g.fill();
+        return c;
+    }
+
+    // 草地小雏菊
+    function makeDaisy(petalCol, coreCol) {
+        var S = 40, c = document.createElement('canvas');
+        c.width = c.height = S;
+        var g = c.getContext('2d');
+        g.translate(S / 2, S / 2);
+        g.fillStyle = petalCol;
+        for (var i = 0; i < 6; i++) {
+            g.rotate(TAU / 6);
+            g.beginPath();
+            g.ellipse(0, -S * 0.26, S * 0.10, S * 0.24, 0, 0, TAU);
+            g.fill();
+        }
+        g.fillStyle = coreCol;
+        g.beginPath(); g.arc(0, 0, S * 0.11, 0, TAU); g.fill();
+        return c;
+    }
+
     var SPR = {
         sun: makeGlow('rgba(255,236,170,%A%)', 128),
         pink: makeGlow('rgba(255,168,200,%A%)', 96),
-        ice: makeGlow('rgba(210,236,255,%A%)', 96),
         white: makeGlow('rgba(255,252,246,%A%)', 96),
         green: makeGlow('rgba(170,224,150,%A%)', 96),
-        cloud: makeCloud(),
-        // 花瓣（前两种为樱花粉/白，第三种为嫩绿叶）
+        clouds: [makeCloud(11), makeCloud(29), makeCloud(47)],
+        puffs: [
+            makePuff('#ffe3ef', 'rgb(255,182,210)'),
+            makePuff('#ffd9e8', 'rgb(250,166,199)'),
+            makePuff('#fff0f6', 'rgb(255,199,221)'),
+            makePuff('#ffe8f1', 'rgb(244,152,192)')
+        ],
+        daisies: [
+            makeDaisy('#ffffff', '#ffd24d'),
+            makeDaisy('#ffd9e8', '#ff9db8'),
+            makeDaisy('#fff3c4', '#ffb347')
+        ],
         petals: [
             makePetal('#ffe1ec', '#ffb0cf', 'rgba(255,160,200,0.8)'),
             makePetal('#fff6fb', '#ffd6e6', 'rgba(255,190,214,0.8)'),
             makePetal('#c7ebac', '#93cf77', 'rgba(150,205,120,0.8)')
         ],
-        // 飘落的花瓣：粉、白两色
         fall: [
             makePetal('#ffe1ec', '#ffb0cf', 'rgba(255,160,200,0.8)'),
             makePetal('#fff6fb', '#ffd6e6', 'rgba(255,190,214,0.8)')
@@ -202,8 +262,19 @@
     /* ------------------------------------------------------ 程序化 3D 树 */
     var branches = [];
     var blossoms = [];
+    var puffs = [];
 
     (function buildTree() {
+        function addPuff(p, t0) {
+            if (puffs.length >= Q.puffs) return;
+            puffs.push({
+                p: V(p.x + rr(-0.5, 0.5), p.y + rr(-0.3, 0.55), p.z + rr(-0.5, 0.5)),
+                r: rr(0.6, 1.25),
+                t0: t0 + rr(0, 1.6),
+                tone: (rng() * SPR.puffs.length) | 0,
+                twk: rr(0, TAU)
+            });
+        }
         function branch(origin, dir, len, rad, depth, t0, dur) {
             var segs = depth === 0 ? 15 : Math.max(5, 11 - depth * 2);
             var nodes = [];
@@ -228,8 +299,11 @@
                 for (var k = 0; k < 3; k++) {
                     addBlossom(nodes[Math.max(0, nodes.length - 1 - k * 2)].p, t0 + dur, b);
                 }
+                addPuff(p, t0 + dur);
+                if (rng() < 0.5) addPuff(nodes[(segs * 0.6) | 0].p, t0 + dur);
                 return;
             }
+            if (depth === 3 && rng() < 0.6) addPuff(p, t0 + dur * 1.1);
             var kids = depth === 0 ? 4 : (depth === 1 ? 3 : (rng() < 0.7 ? 3 : 2));
             var baseRoll = rr(0, TAU);
             for (var c = 0; c < kids; c++) {
@@ -263,14 +337,49 @@
         return V(a * amp, 0, Math.cos(t * 0.5 + b.sway) * amp * 0.6);
     }
 
-    /* ------------------------------------------------------------ 粒子 */
-    // 白云：高空飘浮，缓缓向右移动
+    /* ------------------------------------------------------------ 场景物 */
+    // 白云（三层视差：远 / 中 / 近）
     var clouds = [];
     for (var i = 0; i < Q.clouds; i++) {
+        var layer = i % 3;
         clouds.push({
-            p: V(rr(-80, 80), rr(20, 52), rr(-105, -48)),
-            s: rr(8, 17), sp: rr(0.25, 0.7), a: rr(0.4, 0.72)
+            p: V(rr(-90, 90), rr(20, 30) + layer * rr(8, 14), -60 - layer * rr(18, 30)),
+            s: rr(9, 15) + layer * 4,
+            sp: rr(0.2, 0.45) + layer * 0.18,
+            a: rr(0.5, 0.8),
+            spr: SPR.clouds[(rng() * 3) | 0]
         });
+    }
+
+    // 草地小花：绕树一圈随机散布
+    var flowers = [];
+    for (var i4 = 0; i4 < Q.flowers; i4++) {
+        var fa = rr(0, TAU), fr = rr(2.6, 14);
+        flowers.push({
+            p: V(Math.cos(fa) * fr, 0.03, Math.sin(fa) * fr * 0.85),
+            size: rr(0.16, 0.3),
+            spr: SPR.daisies[(rng() * SPR.daisies.length) | 0],
+            t0: rr(0, 3.2),
+            sway: rr(0, TAU)
+        });
+    }
+
+    // 蝴蝶：绕树飞舞
+    var butterflies = [];
+    for (var i5 = 0; i5 < Q.butterflies; i5++) {
+        butterflies.push({
+            baseR: rr(5, 11), baseH: rr(4, 9.5),
+            speed: rr(0.12, 0.22) * (rng() < 0.5 ? 1 : -1),
+            ph: rr(0, TAU), bob: rr(0.5, 1.1),
+            flap: rr(7, 11), size: rr(0.30, 0.44),
+            col: ['#ffffff', '#ffe08a', '#ffb9d4'][(rng() * 3) | 0]
+        });
+    }
+
+    // 飞鸟（一小队，屏幕空间掠过高空）
+    var birds = [];
+    for (var i6 = 0; i6 < 5; i6++) {
+        birds.push({ ox: i6 * 0.055 + rr(-0.008, 0.008), oy: Math.abs(i6 - 2) * 0.03 + rr(-0.006, 0.006), ph: rr(0, TAU) });
     }
 
     var petals = [];
@@ -286,7 +395,7 @@
     }
     for (var i2 = 0; i2 < Q.petals; i2++) petals.push(resetPetal({}, true));
 
-    // 阳光下的浮尘 / 花粉，缓缓上浮
+    // 阳光下的浮尘 / 花粉
     var motes = [];
     for (var i3 = 0; i3 < Q.motes; i3++) {
         motes.push({
@@ -326,7 +435,6 @@
             P = V(Math.sin(ang2) * rad2, 10.5 + Math.sin(f * 0.13) * 1.4, Math.cos(ang2) * rad2);
             Tg = V(0, 9 + Math.sin(f * 0.08) * 0.7, 0);
         }
-        // 平滑（临界阻尼），无手持抖动
         var k1 = 1 - Math.pow(0.0009, dt);
         cam.dpos = vlerp(cam.dpos, P, k1);
         cam.dtgt = vlerp(cam.dtgt, Tg, k1);
@@ -354,73 +462,86 @@
         if (ez <= 0.001) return cy;
         return cy - focal * (ey / ez);
     }
+    function camYaw() {
+        return Math.atan2(basis.f.x, -basis.f.z);
+    }
 
     // 明净蓝天渐变（顶部湛蓝 → 地平线附近的暖白）
     function drawSky(t) {
         var grd = ctx.createLinearGradient(0, 0, 0, canvas.height);
-        grd.addColorStop(0.00, '#5fb4f2');
-        grd.addColorStop(0.34, '#8fcdf6');
-        grd.addColorStop(0.62, '#c4e6fb');
-        grd.addColorStop(0.82, '#eaf6ff');
-        grd.addColorStop(1.00, '#fdf1ec');
+        grd.addColorStop(0.00, '#4aa5ec');
+        grd.addColorStop(0.32, '#7fc4f4');
+        grd.addColorStop(0.60, '#bde2fa');
+        grd.addColorStop(0.80, '#e9f5fd');
+        grd.addColorStop(1.00, '#fdf3ea');
         ctx.fillStyle = grd;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
-    // 暖阳：柔和外晕 + 明亮内核 + 缓缓旋转的光芒
+    // 暖阳：多层柔晕 + 细腻光芒 + 沿对角线的镜头光斑
     function drawSun(t) {
         var q = proj(sun);
         if (!q) return;
         ctx.globalCompositeOperation = 'lighter';
-        // 光芒
+        // 光芒（细长、缓慢旋转、若隐若现）
         ctx.save();
         ctx.translate(q.x, q.y);
-        ctx.rotate(t * 0.03);
-        var rays = 12, len = 190 * DPR, inr = 60 * DPR;
-        ctx.strokeStyle = 'rgba(255,240,190,0.16)';
-        ctx.lineWidth = 8 * DPR;
+        ctx.rotate(t * 0.02);
+        var rays = 14;
         ctx.lineCap = 'round';
         for (var i = 0; i < rays; i++) {
             var a = i / rays * TAU;
-            var wob = 1 + 0.12 * Math.sin(t * 1.3 + i);
+            var wob = 0.75 + 0.25 * Math.sin(t * 0.9 + i * 2.1);
+            var len = (i % 2 ? 150 : 230) * DPR * wob;
+            var g2 = ctx.createLinearGradient(Math.cos(a) * 55 * DPR, Math.sin(a) * 55 * DPR,
+                Math.cos(a) * len, Math.sin(a) * len);
+            g2.addColorStop(0, 'rgba(255,244,200,0.20)');
+            g2.addColorStop(1, 'rgba(255,244,200,0)');
+            ctx.strokeStyle = g2;
+            ctx.lineWidth = (i % 2 ? 3 : 5.5) * DPR;
             ctx.beginPath();
-            ctx.moveTo(Math.cos(a) * inr, Math.sin(a) * inr);
-            ctx.lineTo(Math.cos(a) * len * wob, Math.sin(a) * len * wob);
+            ctx.moveTo(Math.cos(a) * 55 * DPR, Math.sin(a) * 55 * DPR);
+            ctx.lineTo(Math.cos(a) * len, Math.sin(a) * len);
             ctx.stroke();
         }
         ctx.restore();
-        // 光晕 + 内核
-        drawSprite(SPR.sun, q.x, q.y, 640 * DPR, 0.30);
-        drawSprite(SPR.sun, q.x, q.y, 300 * DPR, 0.40);
-        drawSprite(SPR.white, q.x, q.y, 150 * DPR, 0.75);
-        drawSprite(SPR.white, q.x, q.y, 78 * DPR, 0.9);
+        // 多层光晕 + 内核
+        drawSprite(SPR.sun, q.x, q.y, 700 * DPR, 0.26);
+        drawSprite(SPR.sun, q.x, q.y, 320 * DPR, 0.36);
+        drawSprite(SPR.white, q.x, q.y, 150 * DPR, 0.7);
+        drawSprite(SPR.white, q.x, q.y, 76 * DPR, 0.92);
+        // 镜头光斑：沿太阳→画面中心延长线的几枚柔和光点
+        var dx = cx - q.x, dy = cy - q.y;
+        var spots = [[0.35, 26, 0.10], [0.62, 14, 0.08], [0.85, 38, 0.06], [1.18, 20, 0.05]];
+        for (var s = 0; s < spots.length; s++) {
+            var f = spots[s][0];
+            drawSprite(SPR.sun, q.x + dx * f, q.y + dy * f, spots[s][1] * 2.6 * DPR, spots[s][2]);
+        }
         ctx.globalCompositeOperation = 'source-over';
         ctx.globalAlpha = 1;
     }
 
-    // 雨后彩虹：随树的生长柔柔浮现，横跨天际
+    // 柔雾彩虹：一整条平滑渐变的光带，随树的绽放缓缓浮现
     function drawRainbow(t) {
-        var gate = span(T, ACT.grow + 1.5, ACT.grow + 6);
+        var gate = span(T, ACT.grow + 1.5, ACT.grow + 6.5);
         if (gate <= 0) return;
-        var cxp = canvas.width * 0.5 + Math.sin(t * 0.05) * canvas.width * 0.02;
-        var cyp = canvas.height * 1.02;
-        var R = Math.max(canvas.width, canvas.height) * 0.72;
-        var bands = [
-            'rgba(255,140,150,', 'rgba(255,190,120,', 'rgba(255,238,150,',
-            'rgba(160,225,150,', 'rgba(140,205,255,', 'rgba(160,170,255,', 'rgba(205,155,240,'
-        ];
-        var bw = R * 0.026;
-        ctx.save();
-        ctx.globalCompositeOperation = 'lighter';
-        for (var i = 0; i < bands.length; i++) {
-            ctx.beginPath();
-            ctx.lineWidth = bw;
-            ctx.strokeStyle = bands[i] + (0.16 * gate).toFixed(3) + ')';
-            ctx.arc(cxp, cyp, R - i * bw, Math.PI, TAU);
-            ctx.stroke();
-        }
-        ctx.restore();
-        ctx.globalCompositeOperation = 'source-over';
+        var g = easeOut(gate);
+        var cxp = canvas.width * (0.52 + Math.sin(t * 0.04) * 0.015);
+        var cyp = canvas.height * 1.08;
+        var R = Math.max(canvas.width, canvas.height) * 0.80;
+        var inner = R * 0.66;
+        var grd = ctx.createRadialGradient(cxp, cyp, inner, cxp, cyp, R);
+        var A = 0.30 * g;
+        grd.addColorStop(0.00, 'rgba(200,160,240,0)');
+        grd.addColorStop(0.10, 'rgba(196,150,238,' + (A * 0.55).toFixed(3) + ')');
+        grd.addColorStop(0.26, 'rgba(140,190,250,' + (A * 0.6).toFixed(3) + ')');
+        grd.addColorStop(0.42, 'rgba(150,222,160,' + (A * 0.6).toFixed(3) + ')');
+        grd.addColorStop(0.58, 'rgba(252,238,150,' + (A * 0.65).toFixed(3) + ')');
+        grd.addColorStop(0.74, 'rgba(255,196,130,' + (A * 0.65).toFixed(3) + ')');
+        grd.addColorStop(0.90, 'rgba(255,148,150,' + (A * 0.6).toFixed(3) + ')');
+        grd.addColorStop(1.00, 'rgba(255,148,150,0)');
+        ctx.fillStyle = grd;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.globalAlpha = 1;
     }
 
@@ -428,13 +549,74 @@
         for (var i = 0; i < clouds.length; i++) {
             var c = clouds[i];
             c.p.x += c.sp * dt;
-            if (c.p.x > 82) { c.p.x = -82; c.p.z = rr(-105, -48); c.p.y = rr(20, 52); }
+            if (c.p.x > 95) { c.p.x = -95; }
             var q = proj(c.p);
             if (!q) continue;
-            var w = c.s * q.s * 1.6, h = w * 0.6;
-            drawSpriteWH(SPR.cloud, q.x, q.y, w, h, c.a);
+            var w = c.s * q.s * 1.9, h = w * 0.5;
+            drawSpriteWH(c.spr, q.x, q.y, w, h, c.a);
         }
         ctx.globalAlpha = 1;
+    }
+
+    // 飞鸟：远处天空一小队候鸟，翅膀起伏
+    function drawBirds(t) {
+        var prog = (t * 0.012) % 1.4 - 0.2;
+        var bx = prog * canvas.width;
+        var by = canvas.height * (0.17 + Math.sin(t * 0.1) * 0.02);
+        ctx.strokeStyle = 'rgba(70,95,120,0.5)';
+        ctx.lineWidth = 1.6 * DPR;
+        ctx.lineCap = 'round';
+        for (var i = 0; i < birds.length; i++) {
+            var b = birds[i];
+            var x = bx + b.ox * canvas.width;
+            var y = by + b.oy * canvas.height + Math.sin(t * 0.8 + b.ph) * 3 * DPR;
+            if (x < -30 || x > canvas.width + 30) continue;
+            var f = Math.sin(t * 7 + b.ph) * 0.5 + 0.5;   // 拍翅
+            var wspan = 7 * DPR, lift = (2.2 + f * 3.4) * DPR;
+            ctx.beginPath();
+            ctx.moveTo(x - wspan, y);
+            ctx.quadraticCurveTo(x - wspan * 0.4, y - lift, x, y);
+            ctx.quadraticCurveTo(x + wspan * 0.4, y - lift, x + wspan, y);
+            ctx.stroke();
+        }
+        ctx.globalAlpha = 1;
+    }
+
+    // 远山两层 + 地平线雾气，让画面有纵深
+    function drawHills(t) {
+        var hy = horizonY();
+        var yaw = camYaw();
+        var wpx = canvas.width;
+        // 远层（蓝绿色，被大气淡化）
+        ctx.fillStyle = 'rgba(148,196,190,0.55)';
+        drawHillLayer(hy, yaw * 0.25 * wpx, [
+            [-0.15, 0.055, 0.5], [0.32, 0.075, 0.62], [0.78, 0.05, 0.48], [1.15, 0.065, 0.55]
+        ]);
+        // 近层（青绿色）
+        ctx.fillStyle = 'rgba(146,198,132,0.8)';
+        drawHillLayer(hy, yaw * 0.45 * wpx, [
+            [0.05, 0.045, 0.75], [0.55, 0.06, 0.9], [1.0, 0.04, 0.7]
+        ]);
+        // 地平线雾气
+        var mh = canvas.height * 0.10;
+        var fg = ctx.createLinearGradient(0, hy - mh, 0, hy + mh * 0.6);
+        fg.addColorStop(0, 'rgba(240,250,255,0)');
+        fg.addColorStop(0.55, 'rgba(240,250,255,0.4)');
+        fg.addColorStop(1, 'rgba(240,250,255,0)');
+        ctx.fillStyle = fg;
+        ctx.fillRect(0, hy - mh, canvas.width, mh * 1.6);
+        ctx.globalAlpha = 1;
+    }
+    function drawHillLayer(hy, shift, bumps) {
+        var wpx = canvas.width;
+        for (var i = 0; i < bumps.length; i++) {
+            var bx = ((bumps[i][0] * wpx - shift) % (wpx * 1.4) + wpx * 1.4) % (wpx * 1.4) - wpx * 0.2;
+            var bh = bumps[i][1] * canvas.height;
+            var bw = bumps[i][2] * wpx * 0.5;
+            ctx.beginPath();
+            ctx.ellipse(bx, hy + bh * 0.35, bw, bh, 0, Math.PI, TAU);
+            ctx.fill();
+        }
     }
 
     function drawGround(t) {
@@ -442,26 +624,78 @@
         if (hy > -canvas.height) {
             var top = Math.max(hy, -10);
             var grd = ctx.createLinearGradient(0, top, 0, canvas.height);
-            grd.addColorStop(0, 'rgba(197,231,168,0)');
-            grd.addColorStop(0.12, 'rgba(178,220,150,0.75)');
-            grd.addColorStop(0.55, 'rgba(140,196,120,0.95)');
-            grd.addColorStop(1, 'rgba(108,172,96,1)');
+            grd.addColorStop(0, 'rgba(196,226,158,0.9)');
+            grd.addColorStop(0.3, 'rgba(163,210,132,1)');
+            grd.addColorStop(1, 'rgba(112,175,98,1)');
             ctx.fillStyle = grd;
             ctx.fillRect(0, top, canvas.width, canvas.height - top);
+            // 光影起伏：几道极淡的明暗带，草地不再是死平的
+            ctx.globalAlpha = 0.16;
+            for (var i = 0; i < 3; i++) {
+                var yy = top + (canvas.height - top) * (0.25 + i * 0.24) + Math.sin(t * 0.05 + i * 2) * 6 * DPR;
+                var bg = ctx.createLinearGradient(0, yy - 30 * DPR, 0, yy + 30 * DPR);
+                bg.addColorStop(0, 'rgba(255,255,240,0)');
+                bg.addColorStop(0.5, i % 2 ? 'rgba(255,255,220,0.5)' : 'rgba(80,130,70,0.4)');
+                bg.addColorStop(1, 'rgba(255,255,240,0)');
+                ctx.fillStyle = bg;
+                ctx.fillRect(0, yy - 30 * DPR, canvas.width, 60 * DPR);
+            }
+            ctx.globalAlpha = 1;
         }
         // 树根处的暖光池
         var base = proj(V(0, 0.02, 0));
         if (base) {
             var r = 180 * base.s / 30 * DPR + 40 * DPR;
             var pg = ctx.createRadialGradient(base.x, base.y, 0, base.x, base.y, r);
-            pg.addColorStop(0, 'rgba(255,244,200,0.35)');
-            pg.addColorStop(0.5, 'rgba(200,230,150,0.12)');
+            pg.addColorStop(0, 'rgba(255,246,200,0.30)');
+            pg.addColorStop(0.5, 'rgba(210,235,160,0.10)');
             pg.addColorStop(1, 'rgba(150,200,120,0)');
             ctx.globalCompositeOperation = 'lighter';
             ctx.fillStyle = pg;
             ctx.beginPath(); ctx.ellipse(base.x, base.y, r, r * 0.3, 0, 0, TAU); ctx.fill();
             ctx.globalCompositeOperation = 'source-over';
         }
+    }
+
+    // 树影：花冠长成后，树下投出一片柔和的影子
+    function drawShadow(t) {
+        var gate = span(T, ACT.grow + 2.5, ACT.grow + 6.5);
+        if (gate <= 0) return;
+        var q = proj(V(-2.0, 0.02, 0.6));
+        if (!q) return;
+        var rx = 6.2 * q.s, ry = rx * 0.26;
+        var sg = ctx.createRadialGradient(q.x, q.y, 0, q.x, q.y, rx);
+        sg.addColorStop(0, 'rgba(52,96,58,' + (0.30 * gate).toFixed(3) + ')');
+        sg.addColorStop(0.7, 'rgba(52,96,58,' + (0.14 * gate).toFixed(3) + ')');
+        sg.addColorStop(1, 'rgba(52,96,58,0)');
+        ctx.save();
+        ctx.translate(q.x, q.y);
+        ctx.scale(1, ry / rx);
+        ctx.fillStyle = sg;
+        ctx.beginPath(); ctx.arc(0, 0, rx, 0, TAU); ctx.fill();
+        ctx.restore();
+        ctx.globalAlpha = 1;
+    }
+
+    // 草地小花：随树的绽放陆续探出头
+    function drawFlowers(t) {
+        var g0 = T - (ACT.grow + 4.5);
+        if (g0 <= 0) return;
+        for (var i = 0; i < flowers.length; i++) {
+            var f = flowers[i];
+            var pop = sat((g0 - f.t0) / 1.4);
+            if (pop <= 0) continue;
+            var q = proj(f.p);
+            if (!q) continue;
+            var size = f.size * q.s * easeOut(pop) * (0.5 + 0.5 * Math.min(1, pop * 2));
+            ctx.save();
+            ctx.translate(q.x, q.y);
+            ctx.rotate(Math.sin(t * 0.8 + f.sway) * 0.1);
+            ctx.globalAlpha = 0.95;
+            ctx.drawImage(f.spr, -size / 2, -size / 2, size, size);
+            ctx.restore();
+        }
+        ctx.globalAlpha = 1;
     }
 
     function drawTree(t) {
@@ -473,7 +707,7 @@
             var b = branches[i];
             var p = sat((growT - b.t0) / b.dur);
             if (p <= 0) continue;
-            var trunkCol = b.depth <= 1 ? '#7a4a2c' : (b.depth === 2 ? '#8a5a33' : '#98663c');
+            var trunkCol = b.depth <= 1 ? '#6d4126' : (b.depth === 2 ? '#7d502d' : '#8d5d36');
             var n = b.nodes.length;
             var upto = p * (n - 1);
             var count = Math.floor(upto);
@@ -494,7 +728,7 @@
                             var ldx = sn.x - q.x, ldy = sn.y - q.y, ll = Math.sqrt(ldx * ldx + ldy * ldy) || 1;
                             ox = ldx / ll * lw * 0.24; oy = ldy / ll * lw * 0.24;
                         }
-                        ctx.strokeStyle = 'rgba(255,236,190,0.4)';
+                        ctx.strokeStyle = 'rgba(255,236,190,0.35)';
                         ctx.lineWidth = lw * 0.42;
                         ctx.beginPath(); ctx.moveTo(prev.x + ox, prev.y + oy); ctx.lineTo(q.x + ox, q.y + oy); ctx.stroke();
                     }
@@ -515,6 +749,39 @@
         ctx.globalAlpha = 1;
     }
 
+    // 花冠：柔软的粉色绒球从远到近堆叠，形成饱满的樱花树冠
+    var puffOrder = [];
+    function drawCanopy(t) {
+        var growT = T - ACT.grow;
+        var sn = proj(sun);
+        puffOrder.length = 0;
+        for (var i = 0; i < puffs.length; i++) {
+            var pf = puffs[i];
+            var age = growT - pf.t0;
+            if (age <= 0) continue;
+            var pop = easeOut(sat(age / 1.6));
+            var breathe = 1 + 0.05 * Math.sin(t * 0.9 + pf.twk);
+            var sway = Math.sin(t * 0.6 + pf.twk) * 0.1;
+            var q = proj(V(pf.p.x + sway, pf.p.y, pf.p.z));
+            if (!q) continue;
+            puffOrder.push({ q: q, size: pf.r * q.s * pop * breathe * 2.1, tone: pf.tone, pop: pop });
+        }
+        puffOrder.sort(function (a, b) { return b.q.z - a.q.z; });
+        for (var k = 0; k < puffOrder.length; k++) {
+            var o = puffOrder[k];
+            drawSprite(SPR.puffs[o.tone], o.q.x, o.q.y, o.size, 0.94 * o.pop);
+            // 朝向太阳的一侧提亮
+            if (sn && o.size > 8 * DPR) {
+                var dx = sn.x - o.q.x, dy = sn.y - o.q.y, dl = Math.sqrt(dx * dx + dy * dy) || 1;
+                ctx.globalCompositeOperation = 'lighter';
+                drawSprite(SPR.white, o.q.x + dx / dl * o.size * 0.16, o.q.y + dy / dl * o.size * 0.16,
+                    o.size * 0.5, 0.10 * o.pop);
+                ctx.globalCompositeOperation = 'source-over';
+            }
+        }
+        ctx.globalAlpha = 1;
+    }
+
     function drawBlossoms(t) {
         var growT = T - ACT.grow;
         ctx.globalCompositeOperation = 'lighter';
@@ -527,9 +794,9 @@
             var q = proj(vadd(f.p, windOffset(f.host, f.host.nodes.length - 1, t)));
             if (!q) continue;
             var size = f.size * q.s * sc;
-            var al = 0.7 + 0.3 * Math.sin(t * 1.5 + f.twk);
+            var al = 0.55 + 0.25 * Math.sin(t * 1.5 + f.twk);
             var isLeaf = f.tone % 3 === 2;
-            drawSprite(isLeaf ? SPR.green : SPR.pink, q.x, q.y, size * 7, al * 0.35);
+            drawSprite(isLeaf ? SPR.green : SPR.pink, q.x, q.y, size * 6, al * 0.28);
             var spr = SPR.petals[f.tone % SPR.petals.length];
             ctx.save();
             ctx.translate(q.x, q.y);
@@ -537,7 +804,7 @@
             var leaves = isLeaf ? 2 : 5;
             for (var k = 0; k < leaves; k++) {
                 ctx.rotate(TAU / leaves);
-                ctx.globalAlpha = al * 0.9;
+                ctx.globalAlpha = al * 0.8;
                 ctx.drawImage(spr, size * 0.15, -size * 0.85, size * 1.7, size * 1.7);
             }
             ctx.restore();
@@ -547,18 +814,66 @@
         ctx.globalAlpha = 1;
     }
 
+    // 蝴蝶：绕树飞舞，翅膀扇动
+    function drawButterflies(t) {
+        var gate = span(T, ACT.grow + 5.5, ACT.grow + 8.5);
+        if (gate <= 0) return;
+        for (var i = 0; i < butterflies.length; i++) {
+            var bf = butterflies[i];
+            var a = t * bf.speed + bf.ph;
+            var wob = Math.sin(t * 0.7 + bf.ph * 2) * 1.6;
+            var pos = V(
+                Math.cos(a) * (bf.baseR + wob),
+                bf.baseH + Math.sin(t * bf.bob + bf.ph) * 1.4,
+                Math.sin(a) * (bf.baseR + wob) * 0.8
+            );
+            var q = proj(pos);
+            if (!q) continue;
+            var size = bf.size * q.s;
+            var flap = Math.abs(Math.sin(t * bf.flap + bf.ph));
+            var tilt = Math.sin(a) * 0.5;
+            ctx.save();
+            ctx.translate(q.x, q.y);
+            ctx.rotate(tilt);
+            ctx.globalAlpha = 0.92 * gate;
+            // 两片翅膀（扇动 = 水平压缩）
+            ctx.fillStyle = bf.col;
+            ctx.strokeStyle = 'rgba(120,90,110,0.35)';
+            ctx.lineWidth = Math.max(0.6, size * 0.03);
+            for (var w = -1; w <= 1; w += 2) {
+                ctx.save();
+                ctx.scale(w * (0.25 + 0.75 * flap), 1);
+                ctx.beginPath();
+                ctx.ellipse(size * 0.34, -size * 0.16, size * 0.32, size * 0.22, -0.5, 0, TAU);
+                ctx.fill(); ctx.stroke();
+                ctx.beginPath();
+                ctx.ellipse(size * 0.28, size * 0.16, size * 0.24, size * 0.17, 0.4, 0, TAU);
+                ctx.fill(); ctx.stroke();
+                ctx.restore();
+            }
+            // 身体
+            ctx.fillStyle = 'rgba(110,80,95,0.85)';
+            ctx.beginPath();
+            ctx.ellipse(0, 0, size * 0.045, size * 0.2, 0, 0, TAU);
+            ctx.fill();
+            ctx.restore();
+        }
+        ctx.globalAlpha = 1;
+    }
+
     function updatePetals(t, dt) {
+        var gust = Math.sin(t * 0.18) + 0.6 * Math.sin(t * 0.07 + 2);   // 阵风
         for (var i = 0; i < petals.length; i++) {
             var p = petals[i];
             p.sw += p.swSp * dt; p.spin += p.spinSp * dt; p.flip += p.flipSp * dt;
             p.p.y += p.vy * dt;
-            p.p.x += Math.sin(p.sw) * p.swAmp * dt;
+            p.p.x += (Math.sin(p.sw) * p.swAmp + gust * 0.7) * dt;
             p.p.z += Math.cos(p.sw * 0.8) * p.swAmp * 0.5 * dt;
             if (p.p.y < -1.2) resetPetal(p, false);
         }
     }
     function drawPetals(t) {
-        var petalStart = ACT.grow + 5;
+        var petalStart = ACT.grow + 4.5;
         if (T < petalStart) return;
         var gate = sat((T - petalStart) / 4);
         for (var i = 0; i < petals.length; i++) {
@@ -595,7 +910,7 @@
         ctx.globalAlpha = 1;
     }
 
-    // 一颗柔光种子缓缓落下（无闪白、无抖动）
+    // 一颗柔光种子缓缓落下
     function drawSeed(t) {
         if (T > ACT.land + 0.3) return;
         var y = started ? lerp(12.5, 0.1, easeInOut(span(T, 0, ACT.land))) : 12.5 + Math.sin(t * 0.8) * 0.4;
@@ -620,17 +935,24 @@
             bloomG.drawImage(canvas, 0, 0, bloomC.width, bloomC.height);
             bloomG.filter = 'none';
             ctx.globalCompositeOperation = 'lighter';
-            ctx.globalAlpha = 0.13;
+            ctx.globalAlpha = 0.12;
             ctx.drawImage(bloomC, 0, 0, canvas.width, canvas.height);
             ctx.globalAlpha = 1;
             ctx.globalCompositeOperation = 'source-over';
         }
-        // 极淡的暖色暗角，收一点边缘
-        var vg = ctx.createRadialGradient(cx, cy * 0.9, Math.min(cx, cy) * 0.6,
+        // 色彩微调：顶部一点冷蓝、底部一点暖金，画面更有「空气感」
+        var g1 = ctx.createLinearGradient(0, 0, 0, canvas.height);
+        g1.addColorStop(0, 'rgba(110,170,255,0.06)');
+        g1.addColorStop(0.5, 'rgba(255,255,255,0)');
+        g1.addColorStop(1, 'rgba(255,216,170,0.07)');
+        ctx.fillStyle = g1;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // 极淡的中性暗角
+        var vg = ctx.createRadialGradient(cx, cy * 0.92, Math.min(cx, cy) * 0.62,
             cx, cy, Math.max(cx, cy) * 1.15);
         vg.addColorStop(0, 'rgba(255,255,255,0)');
-        vg.addColorStop(0.82, 'rgba(255,238,210,0.05)');
-        vg.addColorStop(1, 'rgba(120,150,110,0.16)');
+        vg.addColorStop(0.85, 'rgba(80,100,90,0.04)');
+        vg.addColorStop(1, 'rgba(60,80,70,0.15)');
         ctx.fillStyle = vg;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.globalAlpha = 1;
@@ -690,9 +1012,15 @@
         drawSun(t);
         drawRainbow(t);
         drawClouds(t, dt);
+        drawBirds(t);
+        drawHills(t);
         drawGround(t);
+        drawShadow(t);
+        drawFlowers(t);
         drawTree(t);
+        drawCanopy(t);
         drawBlossoms(t);
+        drawButterflies(t);
         drawMotes(t, dt);
         drawPetals(t);
         drawSeed(t);
