@@ -1,12 +1,12 @@
 /* ============================================================
-   Cinematic Love Story — 电影级样式层
+   Love Story · 简约浪漫版 样式层
    ============================================================ */
 html, body {
     margin: 0;
     padding: 0;
     width: 100%;
     height: 100%;
-    background: #04020c;
+    background: #070510;
     overflow: hidden;
     font-family: "Kaiti SC", "STKaiti", "KaiTi", "楷体", "Microsoft YaHei", "微软雅黑", serif;
     color: #f6e6ee;
@@ -14,18 +14,12 @@ html, body {
     -webkit-tap-highlight-color: transparent;
 }
 
-a { color: #ffa8c8; font-size: 14px; }
+a { color: #ffb2cd; font-size: 14px; }
 
 #main { width: 100%; height: 100%; }
 #wrap { position: fixed; inset: 0; }
 
-#canvas {
-    position: fixed;
-    left: 0; top: 0;
-    display: block;
-    z-index: 1;
-}
-
+#canvas { position: fixed; left: 0; top: 0; display: block; z-index: 1; }
 body.await #canvas { cursor: pointer; }
 
 #error {
@@ -42,76 +36,52 @@ body.await #canvas { cursor: pointer; }
 #text {
     position: fixed;
     left: 7.5vw;
-    top: 12vh;
+    top: 13vh;
     width: 42vw;
-    max-width: 620px;
+    max-width: 600px;
     z-index: 6;
     pointer-events: none;
-    -webkit-perspective: 900px;
-    perspective: 900px;
-    -webkit-perspective-origin: 0% 50%;
-    perspective-origin: 0% 50%;
 }
 
-#code {
-    display: none;
-    -webkit-transform-style: preserve-3d;
-    transform-style: preserve-3d;
-}
+#code { display: none; }
 
 .line {
-    font-size: clamp(15px, 1.42vw, 21px);
-    line-height: 1.55;
-    letter-spacing: 2.2px;
-    margin: 0 0 1.05em 0;
-    color: #fff3f8;
+    font-size: clamp(15px, 1.4vw, 21px);
+    line-height: 1.6;
+    letter-spacing: 2px;
+    margin: 0 0 1.15em 0;
+    color: #fdf2f6;
     opacity: 0;
-    -webkit-transform: translate3d(-26px, 16px, -180px) rotateY(14deg);
-    transform: translate3d(-26px, 16px, -180px) rotateY(14deg);
-    -webkit-filter: blur(10px);
-    filter: blur(10px);
-    text-shadow:
-        0 0 1px rgba(255, 255, 255, 0.9),
-        0 0 12px rgba(255, 108, 168, 0.55),
-        0 0 40px rgba(150, 70, 255, 0.35);
+    -webkit-transform: translateY(14px);
+    transform: translateY(14px);
+    -webkit-filter: blur(6px);
+    filter: blur(6px);
+    text-shadow: 0 0 1px rgba(255,255,255,0.5), 0 0 16px rgba(255,150,190,0.35);
 }
 
 .line.in {
-    -webkit-animation: lineIn 2.4s cubic-bezier(0.16, 0.84, 0.24, 1) forwards, lineFloat 7s ease-in-out 2.4s infinite;
-    animation: lineIn 2.4s cubic-bezier(0.16, 0.84, 0.24, 1) forwards, lineFloat 7s ease-in-out 2.4s infinite;
+    -webkit-animation: lineIn 2.6s cubic-bezier(0.22, 0.68, 0.24, 1) forwards;
+    animation: lineIn 2.6s cubic-bezier(0.22, 0.68, 0.24, 1) forwards;
 }
 
 @-webkit-keyframes lineIn {
-    0%   { opacity: 0; -webkit-transform: translate3d(-26px, 16px, -180px) rotateY(14deg); -webkit-filter: blur(10px); }
-    60%  { opacity: 1; }
-    100% { opacity: 0.96; -webkit-transform: translate3d(0, 0, 0) rotateY(0deg); -webkit-filter: blur(0); }
+    to { opacity: 0.95; -webkit-transform: translateY(0); -webkit-filter: blur(0); }
 }
 @keyframes lineIn {
-    0%   { opacity: 0; transform: translate3d(-26px, 16px, -180px) rotateY(14deg); filter: blur(10px); }
-    60%  { opacity: 1; }
-    100% { opacity: 0.96; transform: translate3d(0, 0, 0) rotateY(0deg); filter: blur(0); }
+    to { opacity: 0.95; transform: translateY(0); filter: blur(0); }
 }
 
-@-webkit-keyframes lineFloat {
-    0%, 100% { -webkit-transform: translate3d(0, 0, 0); }
-    50%      { -webkit-transform: translate3d(0, -3px, 12px); }
-}
-@keyframes lineFloat {
-    0%, 100% { transform: translate3d(0, 0, 0); }
-    50%      { transform: translate3d(0, -3px, 12px); }
-}
-
-/* 每句前的一点微光 */
+/* 每句前一点柔和微光 */
 .line::before {
     content: "";
     display: inline-block;
-    width: 0.42em;
-    height: 0.42em;
-    margin-right: 0.7em;
-    vertical-align: 0.12em;
+    width: 0.34em;
+    height: 0.34em;
+    margin-right: 0.65em;
+    vertical-align: 0.14em;
     border-radius: 50%;
     background: #ffd9a2;
-    box-shadow: 0 0 10px 2px rgba(255, 190, 120, 0.85), 0 0 26px 6px rgba(255, 120, 170, 0.5);
+    box-shadow: 0 0 8px 1px rgba(255,190,120,0.7);
 }
 
 .say { margin-left: 0; }
@@ -121,132 +91,92 @@ body.await #canvas { cursor: pointer; }
 #clock-box {
     position: fixed;
     left: 7.5vw;
-    bottom: 8vh;
+    bottom: 9vh;
     z-index: 6;
     pointer-events: none;
-    font-size: clamp(15px, 1.55vw, 24px);
+    font-size: clamp(14px, 1.5vw, 23px);
     letter-spacing: 2.5px;
     color: #f7dfe9;
-    text-shadow: 0 0 3px rgba(255, 255, 255, 0.45), 0 0 18px rgba(255, 110, 165, 0.55);
+    text-shadow: 0 0 2px rgba(255,255,255,0.35), 0 0 14px rgba(255,130,175,0.4);
     opacity: 0;
-    -webkit-transform: translateY(24px);
-    transform: translateY(24px);
-    -webkit-transition: opacity 2.2s ease, -webkit-transform 2.2s cubic-bezier(0.16, 0.84, 0.24, 1);
-    transition: opacity 2.2s ease, transform 2.2s cubic-bezier(0.16, 0.84, 0.24, 1);
+    -webkit-transform: translateY(18px);
+    transform: translateY(18px);
+    -webkit-transition: opacity 2.4s ease, -webkit-transform 2.4s cubic-bezier(0.22, 0.68, 0.24, 1);
+    transition: opacity 2.4s ease, transform 2.4s cubic-bezier(0.22, 0.68, 0.24, 1);
 }
-
-#clock-box.show {
-    opacity: 1;
-    -webkit-transform: translateY(0);
-    transform: translateY(0);
-}
-
+#clock-box.show { opacity: 1; -webkit-transform: translateY(0); transform: translateY(0); }
 #clock-box a { font-size: inherit; text-decoration: none; }
 
-#clock {
-    margin-top: 0.3em;
-    white-space: nowrap;
-}
-
+#clock { margin-top: 0.3em; white-space: nowrap; }
 #clock .digit {
     font-family: "Didot", "Georgia", "Times New Roman", serif;
-    font-size: clamp(30px, 3.5vw, 56px);
+    font-size: clamp(28px, 3.2vw, 50px);
     padding: 0 0.09em;
-    color: #ffd489;
-    text-shadow:
-        0 0 4px rgba(255, 255, 255, 0.7),
-        0 0 22px rgba(255, 186, 92, 0.9),
-        0 0 60px rgba(255, 112, 60, 0.45);
-    -webkit-animation: digitGlow 3.4s ease-in-out infinite;
-    animation: digitGlow 3.4s ease-in-out infinite;
+    color: #ffd79a;
+    text-shadow: 0 0 3px rgba(255,255,255,0.5), 0 0 18px rgba(255,190,110,0.6);
 }
-
-@-webkit-keyframes digitGlow { 0%,100%{opacity:.94} 50%{opacity:1} }
-@keyframes digitGlow { 0%,100%{opacity:.94} 50%{opacity:1} }
 
 .STYLE1 { color: #c9aed2; font-size: 0.86em; letter-spacing: 3px; }
-
 .hand { cursor: pointer; }
 
-/* ---------------- 宽银幕黑边 ---------------- */
-#cine-top, #cine-bottom {
-    position: fixed;
-    left: 0;
-    width: 100%;
-    height: 0;
-    background: #000;
-    z-index: 9;
-    pointer-events: none;
-    -webkit-transition: height 2.6s cubic-bezier(0.22, 0.61, 0.36, 1);
-    transition: height 2.6s cubic-bezier(0.22, 0.61, 0.36, 1);
-}
-#cine-top { top: 0; box-shadow: 0 3px 30px rgba(0, 0, 0, 0.95); }
-#cine-bottom { bottom: 0; box-shadow: 0 -3px 30px rgba(0, 0, 0, 0.95); }
-body.cine #cine-top, body.cine #cine-bottom { height: 6vh; }
+/* ---------------- 开场提示（柔和呼吸光环） ---------------- */
+#cine-top, #cine-bottom { display: none; }
 
-/* ---------------- 开场呼吸提示（纯光效，无文字） ---------------- */
 #hint {
     position: fixed;
     left: 50%;
-    bottom: 11vh;
+    bottom: 12vh;
     z-index: 7;
-    width: 46px;
-    height: 46px;
-    margin-left: -23px;
+    width: 40px;
+    height: 40px;
+    margin-left: -20px;
     border-radius: 50%;
-    border: 1px solid rgba(255, 214, 170, 0.55);
+    border: 1px solid rgba(255,214,170,0.45);
     pointer-events: none;
-    -webkit-animation: hintPulse 2.6s ease-out infinite;
-    animation: hintPulse 2.6s ease-out infinite;
+    -webkit-animation: hintPulse 3s ease-out infinite;
+    animation: hintPulse 3s ease-out infinite;
 }
 body.playing #hint { display: none; }
 
 @-webkit-keyframes hintPulse {
-    0%   { -webkit-transform: scale(0.55); opacity: 0; }
-    35%  { opacity: 0.85; }
-    100% { -webkit-transform: scale(1.9); opacity: 0; }
+    0%   { -webkit-transform: scale(0.6); opacity: 0; }
+    35%  { opacity: 0.7; }
+    100% { -webkit-transform: scale(1.8); opacity: 0; }
 }
 @keyframes hintPulse {
-    0%   { transform: scale(0.55); opacity: 0; }
-    35%  { opacity: 0.85; }
-    100% { transform: scale(1.9); opacity: 0; }
+    0%   { transform: scale(0.6); opacity: 0; }
+    35%  { opacity: 0.7; }
+    100% { transform: scale(1.8); opacity: 0; }
 }
 
 /* ---------------- 音乐按钮 ---------------- */
 #music-btn {
     position: fixed;
     z-index: 10001;
-    top: calc(6vh + 14px);
+    top: 16px;
     right: 18px;
-    width: 30px;
+    width: 28px;
     cursor: pointer;
-    opacity: 0.62;
-    -webkit-filter: drop-shadow(0 0 8px rgba(255, 170, 200, 0.8));
-    filter: drop-shadow(0 0 8px rgba(255, 170, 200, 0.8));
-    -webkit-transition: opacity 0.4s ease, top 2.6s cubic-bezier(0.22, 0.61, 0.36, 1);
-    transition: opacity 0.4s ease, top 2.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+    opacity: 0.55;
+    -webkit-filter: drop-shadow(0 0 6px rgba(255,175,205,0.7));
+    filter: drop-shadow(0 0 6px rgba(255,175,205,0.7));
+    -webkit-transition: opacity 0.4s ease;
+    transition: opacity 0.4s ease;
 }
 #music-btn:hover { opacity: 1; }
 
 .rotateImages {
-    -webkit-animation: myRotate 10s linear infinite;
-    animation: myRotate 10s linear infinite;
+    -webkit-animation: myRotate 12s linear infinite;
+    animation: myRotate 12s linear infinite;
 }
-@-webkit-keyframes myRotate {
-    0%   { -webkit-transform: rotate(0deg); }
-    100% { -webkit-transform: rotate(360deg); }
-}
-@keyframes myRotate {
-    0%   { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
+@-webkit-keyframes myRotate { to { -webkit-transform: rotate(360deg); } }
+@keyframes myRotate { to { transform: rotate(360deg); } }
 
 /* ---------------- 移动端 ---------------- */
 @media (max-width: 820px) {
     #text { left: 7vw; top: 9vh; width: 86vw; max-width: none; }
-    .line { font-size: 15px; letter-spacing: 1.2px; margin-bottom: 0.85em; }
+    .line { font-size: 15px; letter-spacing: 1px; margin-bottom: 0.9em; }
     #clock-box { left: 7vw; bottom: 6vh; font-size: 14px; letter-spacing: 1px; }
-    #clock .digit { font-size: 26px; }
-    body.cine #cine-top, body.cine #cine-bottom { height: 3.6vh; }
-    #music-btn { top: calc(3.6vh + 10px); width: 26px; }
+    #clock .digit { font-size: 25px; }
+    #music-btn { top: 12px; width: 25px; }
 }
