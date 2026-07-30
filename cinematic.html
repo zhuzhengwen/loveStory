@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Our Story</title>
+
+    <link type="text/css" rel="stylesheet" href="./index_files/cinematic.css">
+    <script type="text/javascript" src="./index_files/jquery.min.js"></script>
+    <script type="text/javascript" src="./index_files/functions.js" charset="utf-8"></script>
+    <script type="text/javascript" src="./config.js"></script>
+</head>
+<body>
+
+<!-- 音乐 -->
+<img id="music-btn" src="https://ajlovechina.github.io/loveBalloon/static/music.png"
+     alt="music"
+     onclick="event.stopPropagation(); let m = document.querySelector('.song-audio-autoplay'); if (m.paused) {m.play(); this.className = 'rotateImages'} else {m.pause(); this.className = ''}">
+<audio class="song-audio-autoplay" loop style="display:none;visibility:hidden">
+    <source src="./index_files/music.mp3" type="audio/mp3"/>
+</audio>
+
+<div id="main">
+    <div id="error">本页面采用 HTML5 与 Canvas 渲染，您的浏览器暂时无法显示，请更换为最新版
+        <a href="http://www.google.cn/chrome/">Chrome</a> 或
+        <a href="http://firefox.com.cn/download/">Firefox</a> 浏览器。
+    </div>
+
+    <div id="wrap">
+        <canvas id="canvas"></canvas>
+
+        <!-- 情书 -->
+        <div id="text">
+            <div id="code"></div>
+        </div>
+
+        <!-- 相恋计时 -->
+        <div id="clock-box">
+            <span id="clock-box-inside-text"></span>
+            <div id="clock"></div>
+        </div>
+    </div>
+</div>
+
+<!-- 电影黑边 / 暗角 / 开场提示 -->
+<div id="cine-top"></div>
+<div id="cine-bottom"></div>
+<div id="hint"></div>
+
+<script type="text/javascript">
+    // 情书按行渲染（保留 config.js 中的原始文字）
+    (function () {
+        var code = document.getElementById('code');
+        code.innerHTML = config.lines.map(function (item) {
+            return '<p class="line">' + item + '</p>';
+        }).join('');
+        document.getElementById('clock-box-inside-text').innerHTML =
+            config.names[0] + '<span class="STYLE1">与</span> ' +
+            config.names[1] + '<span class="STYLE1">已经相恋了</span>';
+    })();
+</script>
+
+<script type="text/javascript" src="./index_files/cinematic.js"></script>
+
+</body>
+</html>

@@ -1,5 +1,10 @@
 // 霸都丶傲天 2019/7/9  https://Github.com/AJLoveChina
 var config = {
+    // ★ 特效开关 ★
+    //   true  = 新的 3D 电影级特效
+    //   false = 之前的经典爱情树页面
+    cinematic: true,
+
     // 下面的句子不一定非要7句， 你也可以改成4句，2句话都可以
     lines: [
         "亲爱的袁雯雯",
