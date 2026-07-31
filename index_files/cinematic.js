@@ -66,14 +66,14 @@
         /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 
     var Q = {
-        clouds: isMobile ? 8 : 14,
-        petals: isMobile ? 80 : 150,
-        motes: isMobile ? 12 : 24,
-        blossoms: isMobile ? 100 : 200,
-        puffs: isMobile ? 130 : 210,
-        flowers: isMobile ? 26 : 48,
+        clouds: isMobile ? 7 : 12,
+        petals: isMobile ? 55 : 110,
+        motes: isMobile ? 8 : 16,
+        blossoms: isMobile ? 70 : 150,
+        puffs: isMobile ? 90 : 150,
+        flowers: isMobile ? 18 : 36,
         butterflies: isMobile ? 3 : 5,
-        dpr: isMobile ? 1.8 : 2
+        dpr: isMobile ? 1.4 : 1.6
     };
     var supportsFilter = (function () {
         var c = document.createElement('canvas').getContext('2d');
@@ -408,7 +408,7 @@
     /* --------------------------------------------------------- 相机编排 */
     var ACT = { fall: 0.0, land: 2.6, grow: 2.8, text: 9.6, clock: 11.6 };
     var GROW_SPAN = 7.6;
-    var started = false, T = 0, last = 0;
+    var started = false, T = 0, last = 0, frameCount = 0, fpsAcc = 0, fpsN = 0;
     var sun = V(24, 33, -30);          // 暖阳在右上方，避开左侧情书
 
     function cameraDirector(t, dt) {
@@ -487,7 +487,7 @@
         ctx.save();
         ctx.translate(q.x, q.y);
         ctx.rotate(t * 0.02);
-        var rays = 14;
+        var rays = 10;
         ctx.lineCap = 'round';
         for (var i = 0; i < rays; i++) {
             var a = i / rays * TAU;
@@ -722,7 +722,7 @@
                     ctx.strokeStyle = trunkCol;
                     ctx.lineWidth = lw;
                     ctx.beginPath(); ctx.moveTo(prev.x, prev.y); ctx.lineTo(q.x, q.y); ctx.stroke();
-                    if (lw > 1.1 * DPR) {
+                    if (b.depth <= 2 && lw > 1.1 * DPR) {
                         var ox = 0, oy = -lw * 0.24;
                         if (sn) {
                             var ldx = sn.x - q.x, ldy = sn.y - q.y, ll = Math.sqrt(ldx * ldx + ldy * ldy) || 1;
@@ -926,14 +926,18 @@
     }
 
     /* ------------------------------------------------------------ 后期 */
+    var bloomReady = false;
     function postFX() {
-        // 轻柔泛光
+        // 轻柔泛光：昂贵的降采样+模糊每隔一帧才重算，但缓存结果每帧都绘制（亮度稳定、无闪烁）
         if (supportsFilter) {
-            bloomG.globalCompositeOperation = 'source-over';
-            bloomG.clearRect(0, 0, bloomC.width, bloomC.height);
-            bloomG.filter = 'blur(' + (2.4 * DPR).toFixed(1) + 'px) brightness(1.05)';
-            bloomG.drawImage(canvas, 0, 0, bloomC.width, bloomC.height);
-            bloomG.filter = 'none';
+            if ((frameCount & 1) === 0 || !bloomReady) {
+                bloomG.globalCompositeOperation = 'source-over';
+                bloomG.clearRect(0, 0, bloomC.width, bloomC.height);
+                bloomG.filter = 'blur(' + (2.4 * DPR).toFixed(1) + 'px) brightness(1.05)';
+                bloomG.drawImage(canvas, 0, 0, bloomC.width, bloomC.height);
+                bloomG.filter = 'none';
+                bloomReady = true;
+            }
             ctx.globalCompositeOperation = 'lighter';
             ctx.globalAlpha = 0.12;
             ctx.drawImage(bloomC, 0, 0, canvas.width, canvas.height);
@@ -990,11 +994,24 @@
     function frame(now) {
         var dt = last ? Math.min(0.05, (now - last) / 1000) : 0.016;
         last = now;
+        frameCount++;
         var t = now / 1000;
         if (started) T += dt;
 
         if (W !== window.innerWidth || H !== window.innerHeight) {
             if (window.innerWidth > 0 && window.innerHeight > 0) resize();
+        }
+
+        // 自适应降载：开播后若平均帧率持续偏低（<~36fps），自动再降一档分辨率
+        if (started) {
+            fpsAcc += dt; fpsN++;
+            if (fpsN >= 60) {
+                if (fpsAcc / fpsN > 0.028 && Q.dpr > 1.0) {
+                    Q.dpr = Math.max(1.0, Q.dpr - 0.2);
+                    resize();
+                }
+                fpsAcc = 0; fpsN = 0;
+            }
         }
 
         if (started && T >= ACT.text) revealText();

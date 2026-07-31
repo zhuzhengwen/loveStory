@@ -3,7 +3,7 @@ var config = {
     // ★ 特效开关 ★
     //   true  = 新的 3D 电影级特效
     //   false = 之前的经典爱情树页面
-    cinematic: true,
+    cinematic: false,
 
     // 下面的句子不一定非要7句， 你也可以改成4句，2句话都可以
     lines: [
